@@ -1,0 +1,123 @@
+
+<main class="min-h-screen p-4 sm:p-6 lg:p-8 font-sans">
+  <header class="mb-8">
+    <h1 class="text-4xl font-bold text-sky-800">Panel de Monitoreo Geriátrico</h1>
+    <p class="text-slate-600 mt-1">Vista en tiempo real del bienestar de los residentes.</p>
+  </header>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+
+    <!-- Tarjeta de Alerta de Caída -->
+    <div class="lg:col-span-2 xl:col-span-1 p-6 rounded-2xl shadow-lg flex flex-col justify-between"
+         [class]="patientData().fallDetected ? 'bg-red-500 text-white' : 'bg-white text-slate-800'">
+      <h2 class="text-xl font-bold mb-2">Alerta de Caída</h2>
+      @if (patientData().fallDetected) {
+        <div class="flex items-center gap-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          </svg>
+          <p class="text-5xl font-extrabold">¡CAÍDA DETECTADA!</p>
+        </div>
+        <p class="mt-4 text-red-100">Se requiere atención inmediata.</p>
+      } @else {
+        <div class="flex items-center gap-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-green-500" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+          <p class="text-4xl font-bold text-slate-700">Sin Novedad</p>
+        </div>
+        <p class="mt-4 text-slate-500">No se han detectado caídas.</p>
+      }
+    </div>
+    
+    <!-- Tarjeta de Estado Actual -->
+    <div class="p-6 bg-white rounded-2xl shadow-lg">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">Estado Actual</h2>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="font-semibold text-slate-600">ID Residente:</span>
+          <span class="font-mono text-sm bg-slate-200 text-slate-700 px-2 py-1 rounded-md">{{ patientData().patientId }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="font-semibold text-slate-600">Última ubicación:</span>
+          <span class="font-bold text-lg text-sky-700">{{ patientData().currentRoom }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="font-semibold text-slate-600">Último movim.:</span>
+          <span class="font-bold text-lg text-sky-700">{{ lastSeen() }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="font-semibold text-slate-600">Movimiento:</span>
+          @if(patientData().isMoving) {
+            <span class="flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full font-semibold">
+              <span class="h-2 w-2 rounded-full bg-green-500 animate-ping absolute opacity-75"></span>
+              <span class="h-2 w-2 rounded-full bg-green-500"></span>
+              Activo
+            </span>
+          } @else {
+            <span class="flex items-center gap-2 px-3 py-1 bg-slate-100 text-slate-800 rounded-full font-semibold">
+               <span class="h-2 w-2 rounded-full bg-slate-500"></span>
+              Inactivo
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+    
+    <!-- Tarjeta de Pasos Diarios -->
+    <div class="p-6 bg-white rounded-2xl shadow-lg">
+       <h2 class="text-xl font-bold text-slate-800 mb-4">Pasos Diarios</h2>
+       <div class="flex items-center justify-center gap-4">
+         <div class="relative w-32 h-32">
+           <svg class="w-full h-full" viewBox="0 0 36 36">
+              <path class="text-slate-200" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+              <path class="text-teal-500" stroke-width="3" fill="none" [attr.stroke-dasharray]="stepProgress() + ', 100'" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+           </svg>
+           <div class="absolute inset-0 flex flex-col items-center justify-center">
+             <span class="text-3xl font-bold text-sky-800">{{ patientData().dailyStepCount }}</span>
+             <span class="text-slate-500 text-sm">/ {{ dailyStepGoal }}</span>
+           </div>
+         </div>
+       </div>
+       <p class="text-center mt-4 text-slate-600">Nivel de Actividad: <span class="font-bold" [class]="patientData().activityLevel === 'normal' ? 'text-green-600' : 'text-amber-600'">{{ patientData().activityLevel }}</span></p>
+    </div>
+
+    <!-- Tarjeta Sensor de Luz -->
+    <div class="p-6 bg-white rounded-2xl shadow-lg flex flex-col justify-between">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">Sensor de Luz</h2>
+      <div class="flex items-center justify-center gap-4 my-auto">
+        @if (isLightOn()) {
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-yellow-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM20 13h-2.07c.05-.33.07-.66.07-1s-.02-.67-.07-1H20v2zM13 2v2.07c.33.05.66.07 1 .07.34 0 .67-.02 1-.07V2h-2zM4 11H1.93c-.05.33-.07.66-.07 1s.02.67.07 1H4v-2zM11 20v2.07c-.33-.05-.66-.07-1-.07s-.67.02-1 .07V20h2zm-6.41-1.41L6 17.17c.59.59 1.29 1.08 2.07 1.45l.93.41V22h2v-3l.93-.41c.78-.37 1.48-.86 2.07-1.45l1.41-1.41 1.41 1.41 1.41-1.41-1.41-1.41c.59-.59 1.08-1.29 1.45-2.07l.41-.93H22v-2h-3l-.41-.93c-.37-.78-.86-1.48-1.45-2.07l-1.41-1.41-1.41 1.41-1.41-1.41-1.41 1.41c-.59.59-1.08 1.29-1.45 2.07l-.41.93H2v2h3l.41.93c.37.78.86 1.48 1.45 2.07l1.41 1.41 1.41-1.41z"/></svg>
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10c4.17 0 7.7-2.54 9.25-6.09-2.03.73-4.29.43-5.99-1.26-1.7-1.7-2-3.96-1.26-5.99C14.54 3.7 11.99 2 11.99 2z"/></svg>
+        }
+        <p class="text-4xl font-bold text-slate-700">{{ lightLevel() }}%</p>
+      </div>
+      <div class="mt-4">
+        <label for="light-slider" class="sr-only">Nivel de Luz</label>
+        <input id="light-slider" type="range" min="0" max="100" [value]="lightLevel()" (input)="updateLightLevel($event)" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600">
+      </div>
+    </div>
+
+    <!-- Historial de Movimiento -->
+    <div class="md:col-span-2 lg:col-span-3 xl:col-span-4 p-6 bg-white rounded-2xl shadow-lg">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">Historial de Actividad (Últimas 24h)</h2>
+      <div class="flex items-end h-40 gap-1 bg-slate-100 p-2 rounded-lg w-full">
+        @for (level of patientData().movementHistory; track $index) {
+          <div 
+            class="flex-1 rounded-t-sm transition-all duration-300 ease-in-out"
+            [class]="getActivityBarClass(level)"
+            [style.height.%]="getActivityBarHeight(level)"
+            [title]="level + ' - ' + $index + ':00'"
+          ></div>
+        }
+      </div>
+       <div class="flex justify-between text-xs text-slate-500 mt-2 px-2">
+        <span>24h atrás</span>
+        <span>12h atrás</span>
+        <span>Ahora</span>
+      </div>
+    </div>
+
+  </div>
+</main>
